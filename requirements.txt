@@ -16,3 +16,7 @@ pyarrow==18.1.0
 
 # Testing
 pytest==7.4.3
+
+# Streaming
+kafka-python==2.0.2
+websocket-client==1.7.0
