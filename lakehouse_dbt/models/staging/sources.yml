@@ -1,0 +1,39 @@
+version: 2
+
+sources:
+  - name: gold
+    description: "Gold layer — PostgreSQL star schema tables"
+    schema: public
+    tables:
+      - name: fact_trades
+        description: "Core trade events. One row per trade."
+        columns:
+          - name: trade_id
+            description: "Unique trade identifier"
+            tests:
+              - unique
+              - not_null
+          - name: symbol
+            description: "Trading symbol e.g. BTC/USD"
+            tests:
+              - not_null
+          - name: price
+            description: "Trade price"
+            tests:
+              - not_null
+
+      - name: dim_instrument
+        description: "Instrument reference data"
+        columns:
+          - name: symbol
+            tests:
+              - unique
+              - not_null
+
+      - name: dim_time
+        description: "Date dimension"
+        columns:
+          - name: trade_date
+            tests:
+              - unique
+              - not_null
