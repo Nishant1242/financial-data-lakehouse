@@ -19,4 +19,10 @@ pytest==7.4.3
 
 # Streaming
 kafka-python==2.0.2
-websocket-client==1.7.0
+websocket-client==11.0.3
+
+# Data processing
+pandas==2.2.3
+pyarrow==18.1.0
+pyspark==3.5.1
+findspark==2.0.1
