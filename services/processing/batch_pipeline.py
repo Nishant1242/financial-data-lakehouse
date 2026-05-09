@@ -27,11 +27,23 @@ import time
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Optional
+from typing import Optional,Tuple
 
 # Fix HADOOP_HOME for Windows before any Spark imports
-os.environ["HADOOP_HOME"] = "C:\\hadoop"
-os.environ["PATH"] = os.environ["PATH"] + ";C:\\hadoop\\bin"
+# Fix HADOOP_HOME — works on both Windows and Linux
+
+import platform
+if platform.system() == "Windows":
+    os.environ["HADOOP_HOME"] = "C:\\hadoop"
+    os.environ["PATH"] = os.environ["PATH"] + ";C:\\hadoop\\bin"
+else:
+    os.environ["JAVA_HOME"] = "/usr/lib/jvm/default-java"
+    os.environ["HADOOP_HOME"] = "/home/airflow/hadoop"
+    os.environ["PATH"] = (
+        os.environ["PATH"]
+        + ":/usr/lib/jvm/default-java/bin"
+        + ":/home/airflow/hadoop/bin"
+    )
 
 import findspark
 findspark.init()
@@ -292,7 +304,7 @@ def add_derived_columns(df: DataFrame) -> DataFrame:
     )
 
 
-def remove_duplicates(df: DataFrame) -> tuple[DataFrame, int]:
+def remove_duplicates(df: DataFrame) -> Tuple[DataFrame, int]:
     """
     Deduplicates on trade_id — the natural unique key.
     Returns cleaned DataFrame and count of removed dupes.
@@ -342,7 +354,7 @@ def round_numerics(df: DataFrame) -> DataFrame:
 
 def apply_quality_rules(
     df: DataFrame
-) -> tuple[DataFrame, DataFrame]:
+) -> Tuple[DataFrame, DataFrame]:
     """
     Splits DataFrame into passing and failing records.
 
@@ -377,7 +389,7 @@ def apply_quality_rules(
 
 def transform_bronze_to_silver(
     df: DataFrame
-) -> tuple[DataFrame, DataFrame, int]:
+) -> Tuple[DataFrame, DataFrame, int]:
     """
     Orchestrates all transformation steps in order.
     Each step is a pure function — testable independently.

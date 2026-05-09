@@ -24,7 +24,7 @@ import time
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Optional
+from typing import Optional, Tuple
 
 import pandas as pd
 from minio import Minio
@@ -119,7 +119,7 @@ class LoaderResult:
 # ── MinIO reader ───────────────────────────────────────────────────────────────
 def read_silver_to_dataframe(
     storage_cfg: StorageConfig
-) -> tuple[pd.DataFrame, int]:
+) -> Tuple[pd.DataFrame, int]:
     """
     Reads all Silver Parquet files from MinIO into a pandas DataFrame.
     Adds partition columns trade_date and trade_hour from the MinIO file path.
@@ -291,7 +291,7 @@ def upsert_dim_time(
 def insert_fact_trades(
     conn: psycopg.Connection,
     df: pd.DataFrame
-) -> tuple[int, int]:
+) -> Tuple[int, int]:
     """
     Inserts trade records into fact_trades.
     Uses ON CONFLICT DO NOTHING — skips already-loaded trades.

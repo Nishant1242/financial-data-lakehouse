@@ -69,7 +69,6 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-
   kafka:
     image: confluentinc/cp-kafka:7.5.0
     container_name: lakehouse_kafka
@@ -78,7 +77,10 @@ services:
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://kafka:29092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_INTERNAL://0.0.0.0:29092
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_INTERNAL
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
     depends_on:
@@ -94,11 +96,89 @@ services:
       timeout: 10s
       retries: 5
 
+  airflow_postgres:
+    image: postgres:15
+    container_name: lakehouse_airflow_db
+    environment:
+      POSTGRES_DB: airflow
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+    volumes:
+      - airflow_db_data:/var/lib/postgresql/data
+    networks:
+      - lakehouse_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U airflow -d airflow"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  airflow_init:
+    image: apache/airflow:2.8.1
+    container_name: lakehouse_airflow_init
+    depends_on:
+      airflow_postgres:
+        condition: service_healthy
+    environment:
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow_postgres/airflow
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+    command: bash -c "airflow db migrate && airflow users create --username admin --password admin --firstname Admin --lastname User --role Admin --email admin@lakehouse.com"
+    networks:
+      - lakehouse_network
+
+  airflow:
+    image: apache/airflow:2.8.1
+    container_name: lakehouse_airflow
+    depends_on:
+      airflow_postgres:
+        condition: service_healthy
+      airflow_init:
+        condition: service_completed_successfully
+    ports:
+      - "8080:8080"
+    environment:
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow_postgres/airflow
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__WEBSERVER__SECRET_KEY: "lakehouse_secret_key_2026"
+      MINIO_ENDPOINT: "minio:9000"
+      MINIO_ACCESS_KEY: "minioadmin"
+      MINIO_SECRET_KEY: "minioadmin"
+      MINIO_BUCKET_BRONZE: "bronze"
+      MINIO_BUCKET_SILVER: "silver"
+      MINIO_BUCKET_GOLD: "gold"
+      POSTGRES_HOST: "postgres"
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: "lakehouse"
+      POSTGRES_USER: "lakehouse_user"
+      POSTGRES_PASSWORD: "lakehouse_pass"
+      MONGO_URI: "mongodb://mongodb:27017"
+      MONGO_DB: "lakehouse_client"
+      KAFKA_BOOTSTRAP_SERVERS: "kafka:29092"
+      KAFKA_TOPIC_TRADES: "trades"
+    volumes:
+      - ../orchestration/dags:/opt/airflow/dags
+      - airflow_logs:/opt/airflow/logs
+      - ../services:/opt/airflow/services
+      - ../lakehouse_dbt:/opt/airflow/lakehouse_dbt
+    command: >
+      bash -c "airflow scheduler &
+               airflow webserver --port 8080"
+    networks:
+      - lakehouse_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
 volumes:
   minio_data:
   postgres_data:
   mongo_data:
   kafka_data:
+  airflow_db_data:
+  airflow_logs:
 
 networks:
   lakehouse_network:

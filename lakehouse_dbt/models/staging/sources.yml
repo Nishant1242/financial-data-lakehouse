@@ -36,4 +36,4 @@ sources:
           - name: trade_date
             tests:
               - unique
-              - not_null
+              - not_null 

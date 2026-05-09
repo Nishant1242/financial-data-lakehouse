@@ -21,7 +21,7 @@ import time
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Optional
+from typing import Optional ,Tuple ,List
 
 import psycopg
 from psycopg.rows import dict_row
@@ -100,7 +100,7 @@ class LoaderResult:
 # ── Data fetcher ───────────────────────────────────────────────────────────────
 def fetch_symbol_summary(
     pg_conn: psycopg.Connection
-) -> list[dict]:
+) -> List[dict]:
     """
     Fetches symbol performance summary from PostgreSQL analytics schema.
     This is the aggregated data from your dbt mart_symbol_performance model.
@@ -135,7 +135,7 @@ def fetch_recent_trades(
     pg_conn: psycopg.Connection,
     symbol: str,
     limit: int = 10
-) -> list[dict]:
+) -> List[dict]:
     """
     Fetches most recent trades for a symbol from Gold fact table.
     Embedded in the MongoDB document for instant access.
@@ -162,7 +162,7 @@ def fetch_recent_trades(
 def fetch_daily_breakdown(
     pg_conn: psycopg.Connection,
     symbol: str
-) -> list[dict]:
+) -> List[dict]:
     """
     Fetches daily OHLC-style summary per symbol.
     Comes from your dbt mart_daily_summary model.
@@ -190,8 +190,8 @@ def fetch_daily_breakdown(
 # ── Document builder ───────────────────────────────────────────────────────────
 def build_portfolio_document(
     summary: dict,
-    recent_trades: list[dict],
-    daily_breakdown: list[dict]
+    recent_trades: List[dict],
+    daily_breakdown: List[dict]
 ) -> dict:
     """
     Builds a complete portfolio document for one symbol.
@@ -290,8 +290,8 @@ def setup_mongodb_indexes(collection) -> None:
 
 def upsert_portfolio_documents(
     collection,
-    documents: list[dict]
-) -> tuple[int, int]:
+    documents: List[dict]
+) -> Tuple[int, int]:
     """
     Upserts portfolio documents into MongoDB.
     Uses replace_one with upsert=True — creates if not exists,
