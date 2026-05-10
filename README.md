@@ -312,7 +312,7 @@ dbt runs 8 tests on the Gold layer: not_null, unique, accepted_values, relations
 Built as a portfolio project demonstrating production-grade data engineering skills across the full modern data stack.
 
 - GitHub: [Nishant1242](https://github.com/Nishant1242)
-- LinkedIn: [Connect](https://linkedin.com/in/nishant-kadam)
+- LinkedIn: [Connect](https://www.linkedin.com/in/nishant1202/?skipRedirect=true)
 
 ---
 
