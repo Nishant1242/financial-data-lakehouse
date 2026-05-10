@@ -1,6 +1,6 @@
 # 📊 Financial Data Lakehouse
 
-> A production-grade financial data lakehouse streaming real-time crypto market data through a complete modern data stack — built entirely on free, open-source tools.
+> A production-grade financial data lakehouse streaming real-time crypto market data through a complete modern data stack - built entirely on free, open-source tools.
 
 ![Python](https://img.shields.io/badge/Python-3.11-blue?style=flat-square&logo=python)
 ![Apache Kafka](https://img.shields.io/badge/Apache%20Kafka-7.5-231F20?style=flat-square&logo=apachekafka)
